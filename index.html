@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Violin Intonation Trainer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="app__header">
+        <div class="app__title">
+          <h1>Violin Intonation Trainer</h1>
+          <p>Start listening, then sustain a note.</p>
+        </div>
+        <button id="start-button" class="app__start">Start Listening</button>
+        <p id="status-message" class="app__status"></p>
+      </header>
+      <section class="app__visualizer">
+        <canvas id="pitch-canvas"></canvas>
+      </section>
+      <section class="app__readout">
+        <div>
+          <span class="readout__label">Frequency</span>
+          <span id="frequency" class="readout__value">— Hz</span>
+        </div>
+        <div>
+          <span class="readout__label">Note</span>
+          <span id="note" class="readout__value">—</span>
+        </div>
+        <div>
+          <span class="readout__label">Cents</span>
+          <span id="cents" class="readout__value">— ¢</span>
+        </div>
+      </section>
+      <footer class="app__footer">
+        Uses your microphone and the YIN pitch detection algorithm (A4 = 440 Hz).
+      </footer>
+    </main>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,142 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #0c1118;
+  color: #f4f6f8;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app {
+  flex: 1;
+  display: grid;
+  grid-template-rows: min-content 1fr min-content;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 1rem clamp(1rem, 2vw, 2rem);
+  background: rgba(13, 25, 41, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 0;
+  backdrop-filter: blur(8px);
+  margin: 0;
+  width: 100%;
+}
+.app__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.app__title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1 1 auto;
+}
+
+.app__title h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.app__title p {
+  font-size: 0.85rem;
+  color: rgba(244, 246, 248, 0.7);
+}
+
+.app__status {
+  font-size: 0.75rem;
+  color: rgba(244, 246, 248, 0.6);
+  flex: 1 1 100%;
+  text-align: right;
+  min-height: 1rem;
+  order: 3;
+}
+
+.app__start {
+  appearance: none;
+  border: none;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%);
+  padding: 0.55rem 1.2rem;
+  color: #0c1118;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  order: 2;
+}
+
+.app__start:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.app__start:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(111, 134, 214, 0.25);
+}
+
+.app__visualizer {
+  position: relative;
+  min-height: 240px;
+  height: 100%;
+  border-radius: 12px;
+  background: rgba(6, 10, 17, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  display: flex;
+}
+
+.app__visualizer canvas {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.app__readout {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: rgba(244, 246, 248, 0.75);
+  padding: 0.4rem 0;
+  flex-wrap: wrap;
+}
+
+.app__readout > div {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.app__footer {
+  font-size: 0.75rem;
+  color: rgba(244, 246, 248, 0.5);
+  text-align: right;
+}
+
+.readout__label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-right: 0.2rem;
+  color: rgba(244, 246, 248, 0.5);
+}
+
+.readout__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
