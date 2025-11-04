@@ -131,7 +131,7 @@ export class PitchTracker {
 
     // Pull the latest audio frame and reject very quiet input before running YIN.
     this.analyser.getFloatTimeDomainData(this.buffer);
-    const rms = this._rootMeanSquare(this.buffer);
+    const {rms, peak} = this._analyseAmplitude(this.buffer);
     const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
 
     if (rms < this.rmsThreshold) {
@@ -142,7 +142,12 @@ export class PitchTracker {
         });
         this._lastLowRmsLog = now;
       }
-      return null;
+      return {
+        frequency: null,
+        probability: 0,
+        rms,
+        peak,
+      };
     }
 
     const estimation = this.yin.getPitch(this.buffer);
@@ -151,7 +156,12 @@ export class PitchTracker {
         debugLog('YIN returned no pitch candidate.', {rms});
         this._lastNullPitchLog = now;
       }
-      return null;
+      return {
+        frequency: null,
+        probability: 0,
+        rms,
+        peak,
+      };
     }
 
     if (now - this._lastDetectionLog > 500) {
@@ -159,15 +169,27 @@ export class PitchTracker {
       this._lastDetectionLog = now;
     }
 
-    return estimation;
+    return {
+      ...estimation,
+      rms,
+      peak,
+    };
   }
 
-  _rootMeanSquare(buffer) {
+  _analyseAmplitude(buffer) {
     let sum = 0;
+    let peak = 0;
     for (let i = 0; i < buffer.length; i++) {
       const sample = buffer[i];
       sum += sample * sample;
+      const magnitude = Math.abs(sample);
+      if (magnitude > peak) {
+        peak = magnitude;
+      }
     }
-    return Math.sqrt(sum / buffer.length);
+    return {
+      rms: Math.sqrt(sum / buffer.length),
+      peak,
+    };
   }
 }

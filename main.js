@@ -117,8 +117,13 @@ function startPolling() {
         });
         lastNoPitchLog = timestamp;
       }
-      if (missCounter === MISS_THRESHOLD) {
+      if (Number.isFinite(estimation?.peak)) {
+        setStatus("Listening… play a clear tone.", estimation.peak);
+      } else if (missCounter === MISS_THRESHOLD) {
         setStatus("Listening… play a clear tone.");
+      }
+      lastFrequency = null;
+      if (missCounter === MISS_THRESHOLD) {
         resetReadouts();
       }
       return;
@@ -138,6 +143,8 @@ function startPolling() {
     if (lastDetectionTime !== 0 && timeSinceLast < MAX_GAP_MS && lastFrequency !== null) {
       const jump = Math.abs(frequency - lastFrequency);
       if (jump > MAX_JUMP_HZ) {
+        setStatus("Listening", estimation.peak);
+        lastFrequency = null;
         return;
       }
     }
@@ -166,6 +173,7 @@ function startPolling() {
       cents: noteData.cents,
       noteIndex,
     });
+    setStatus("Listening", estimation.peak);
   }, UPDATE_INTERVAL_MS);
 }
 
@@ -174,8 +182,6 @@ function renderReadouts(noteData) {
   noteLabel.textContent = noteData.noteName;
   centsLabel.textContent = formatCents(noteData.cents);
   centsLabel.style.color = colorForCents(noteData.cents);
-  // Clearing the status lets the performer know we have a confident detection.
-  setStatus("");
 }
 
 function resetReadouts() {
@@ -185,7 +191,13 @@ function resetReadouts() {
   centsLabel.style.color = "";
 }
 
-function setStatus(message) {
+function setStatus(message, peak) {
+  if (Number.isFinite(peak)) {
+    const peakText = formatPeak(Math.max(0, Math.min(1, peak)));
+    const prefix = message ? `${message} — ` : "";
+    statusMessage.textContent = `${prefix}peak ${peakText}`;
+    return;
+  }
   statusMessage.textContent = message || "";
 }
 
@@ -203,6 +215,10 @@ function colorForCents(cents) {
   }
 
   return `rgb(${channel}, ${channel}, 255)`;
+}
+
+function formatPeak(peak) {
+  return `${(peak * 100).toFixed(1)}%`;
 }
 
 window.addEventListener("beforeunload", () => {

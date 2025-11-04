@@ -1,11 +1,13 @@
 const NOTE_ORDER = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const CENTS_RANGE = 50; // +/- cents visual range
 const NOTE_COUNT = NOTE_ORDER.length;
+const TIME_WINDOW = 10000; // milliseconds
+
 
 // Maintains a scrolling history of pitch samples and renders them on a canvas.
 export class PitchVisualizer {
   constructor(canvas, {
-    timeWindow = 5000,
+    timeWindow = TIME_WINDOW,
   } = {}) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
