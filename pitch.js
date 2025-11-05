@@ -1,4 +1,5 @@
 import {YinPitchDetector} from './yin.js';
+import {AutoGainController} from './autogain.js';
 
 const ENABLE_DEBUG_LOGS = false;
 const debugLog = (...args) => {
@@ -24,6 +25,7 @@ export class PitchTracker {
     yinThreshold = 0.1,
     probabilityThreshold = 0.15,
     rmsThreshold = 0.01,
+    autoGainOptions = {},
   } = {}) {
     this.bufferSize = bufferSize;
     this.yinThreshold = yinThreshold;
@@ -39,6 +41,15 @@ export class PitchTracker {
     this._lastLowRmsLog = 0;
     this._lastNullPitchLog = 0;
     this._lastDetectionLog = 0;
+    this.autoGain = null;
+    this.autoGainOptions = {
+      targetRms: 0.2,
+      smoothingTime: 0.6,
+      minGain: 0.5,
+      maxGain: 50,
+      gainSlew: 0.1,
+      ...autoGainOptions,
+    };
   }
 
   async init() {
@@ -64,12 +75,15 @@ export class PitchTracker {
 
     // Route the microphone into an analyser node so we can read raw samples for pitch detection.
     this.source = this.audioContext.createMediaStreamSource(this.stream);
+    // Insert an automatic gain controller so the analyser always receives a levelled signal.
+    this.autoGain = new AutoGainController(this.audioContext, this.autoGainOptions);
     this.analyser = this.audioContext.createAnalyser();
     this.analyser.fftSize = this.bufferSize;
     this.analyser.minDecibels = -100;
     this.analyser.maxDecibels = -10;
     this.analyser.smoothingTimeConstant = 0;
-    this.source.connect(this.analyser);
+    this.source.connect(this.autoGain.input);
+    this.autoGain.connect(this.analyser);
 
     this.buffer = new Float32Array(this.analyser.fftSize);
     this.yin = new YinPitchDetector(this.audioContext.sampleRate, {
@@ -103,6 +117,10 @@ export class PitchTracker {
       this.analyser.disconnect();
       this.analyser = null;
     }
+    if (this.autoGain) {
+      this.autoGain.disconnect();
+      this.autoGain = null;
+    }
     if (this.stream) {
       this.stream.getTracks().forEach((track) => track.stop());
       this.stream = null;
@@ -132,6 +150,10 @@ export class PitchTracker {
     // Pull the latest audio frame and reject very quiet input before running YIN.
     this.analyser.getFloatTimeDomainData(this.buffer);
     const {rms, peak} = this._analyseAmplitude(this.buffer);
+    // Feed the amplitude reading into the gain controller before evaluating pitch.
+    const gainMetrics = this.autoGain
+      ? this.autoGain.update(rms)
+      : {smoothedRms: rms, gain: 1};
     const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
 
     if (rms < this.rmsThreshold) {
@@ -147,6 +169,8 @@ export class PitchTracker {
         probability: 0,
         rms,
         peak,
+        smoothedRms: gainMetrics.smoothedRms,
+        gain: gainMetrics.gain,
       };
     }
 
@@ -161,6 +185,8 @@ export class PitchTracker {
         probability: 0,
         rms,
         peak,
+        smoothedRms: gainMetrics.smoothedRms,
+        gain: gainMetrics.gain,
       };
     }
 
@@ -173,6 +199,8 @@ export class PitchTracker {
       ...estimation,
       rms,
       peak,
+      smoothedRms: gainMetrics.smoothedRms,
+      gain: gainMetrics.gain,
     };
   }
 

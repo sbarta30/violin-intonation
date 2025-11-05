@@ -117,8 +117,9 @@ function startPolling() {
         });
         lastNoPitchLog = timestamp;
       }
-      if (Number.isFinite(estimation?.peak)) {
-        setStatus("Listening… play a clear tone.", estimation.peak);
+      const info = estimation || {};
+      if (Number.isFinite(info.peak) || Number.isFinite(info.smoothedRms) || Number.isFinite(info.gain)) {
+        setStatus("Listening… play a clear tone.", info);
       } else if (missCounter === MISS_THRESHOLD) {
         setStatus("Listening… play a clear tone.");
       }
@@ -133,6 +134,7 @@ function startPolling() {
 
     let frequency = estimation.frequency;
     if (frequency <= 0) {
+      setStatus("Listening", estimation);
       return;
     }
 
@@ -143,7 +145,7 @@ function startPolling() {
     if (lastDetectionTime !== 0 && timeSinceLast < MAX_GAP_MS && lastFrequency !== null) {
       const jump = Math.abs(frequency - lastFrequency);
       if (jump > MAX_JUMP_HZ) {
-        setStatus("Listening", estimation.peak);
+        setStatus("Listening", estimation);
         lastFrequency = null;
         return;
       }
@@ -173,7 +175,7 @@ function startPolling() {
       cents: noteData.cents,
       noteIndex,
     });
-    setStatus("Listening", estimation.peak);
+    setStatus("Listening", estimation);
   }, UPDATE_INTERVAL_MS);
 }
 
@@ -191,14 +193,24 @@ function resetReadouts() {
   centsLabel.style.color = "";
 }
 
-function setStatus(message, peak) {
-  if (Number.isFinite(peak)) {
-    const peakText = formatPeak(Math.max(0, Math.min(1, peak)));
-    const prefix = message ? `${message} — ` : "";
-    statusMessage.textContent = `${prefix}peak ${peakText}`;
-    return;
+function setStatus(message, info = {}) {
+  const parts = [];
+  if (Number.isFinite(info.peak)) {
+    parts.push(`peak ${formatPeak(Math.max(0, Math.min(1, info.peak)))}`);
   }
-  statusMessage.textContent = message || "";
+  if (Number.isFinite(info.smoothedRms)) {
+    parts.push(`rms ${info.smoothedRms.toFixed(3)}`);
+  }
+  if (Number.isFinite(info.gain)) {
+    parts.push(`gain ×${info.gain.toFixed(2)}`);
+  }
+
+  let text = message || "";
+  if (parts.length) {
+    text = text ? `${text} — ${parts.join(" | ")}` : parts.join(" | ");
+  }
+
+  statusMessage.textContent = text;
 }
 
 function colorForCents(cents) {
