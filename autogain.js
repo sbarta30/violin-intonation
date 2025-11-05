@@ -4,7 +4,7 @@ export class AutoGainController {
     targetRms = 0.2,
     smoothingTime = 0.6,
     minGain = 0.5,
-    maxGain = 50,
+    maxGain = 200,
     gainSlew = 0.1,
     epsilon = 1e-6,
   } = {}) {

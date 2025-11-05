@@ -9,12 +9,15 @@ const debugLog = (...args) => {
   }
 };
 
+const ENABLE_DETAILED_STATUS = false;
+
 const startButton = document.getElementById("start-button");
 const statusMessage = document.getElementById("status-message");
 const frequencyLabel = document.getElementById("frequency");
 const noteLabel = document.getElementById("note");
 const centsLabel = document.getElementById("cents");
 const canvas = document.getElementById("pitch-canvas");
+const readoutsContainer = document.getElementById("readouts-container");
 
 const tracker = new PitchTracker();
 const visualizer = new PitchVisualizer(canvas);
@@ -35,6 +38,12 @@ let lastNoPitchLog = 0;
 let lastDetectionLog = 0;
 let lastDetectionTime = 0;
 let lastFrequency = null;
+
+if (ENABLE_DETAILED_STATUS) {
+  readoutsContainer.style.display = "block";
+} else {
+  readoutsContainer.style.display = "none";
+}
 
 startButton.addEventListener("click", async () => {
   debugLog("Start button pressed.", { isRunning, isInitializing });
@@ -195,14 +204,16 @@ function resetReadouts() {
 
 function setStatus(message, info = {}) {
   const parts = [];
-  if (Number.isFinite(info.peak)) {
-    parts.push(`peak ${formatPeak(Math.max(0, Math.min(1, info.peak)))}`);
-  }
-  if (Number.isFinite(info.smoothedRms)) {
-    parts.push(`rms ${info.smoothedRms.toFixed(3)}`);
-  }
-  if (Number.isFinite(info.gain)) {
-    parts.push(`gain ×${info.gain.toFixed(2)}`);
+  if (ENABLE_DETAILED_STATUS) {
+    if (Number.isFinite(info.peak)) {
+      parts.push(`peak ${formatPeak(Math.max(0, Math.min(1, info.peak)))}`);
+    }
+    if (Number.isFinite(info.smoothedRms)) {
+      parts.push(`rms ${info.smoothedRms.toFixed(3)}`);
+    }
+    if (Number.isFinite(info.gain)) {
+      parts.push(`gain ×${info.gain.toFixed(2)}`);
+    }
   }
 
   let text = message || "";
